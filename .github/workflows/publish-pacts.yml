@@ -27,7 +27,7 @@ jobs:
         run: dotnet restore PactSample.sln
 
       - name: Run Pact tests (generate contracts)
-        run: dotnet test PactSample.Shipping.PactTests/PactSample.Shipping.PactTests.csproj --no-build
+        run: dotnet test PactSample.Shipping.PactTests/PactSample.Shipping.PactTests.csproj
 
       - name: Publish Pact contracts to PactFlow
         uses: pactflow/actions/publish-pact-files@v2
