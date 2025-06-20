@@ -32,7 +32,7 @@ jobs:
       - name: Publish Pact contracts to PactFlow
         uses: pactflow/actions/publish-pact-files@v2
         with:
-          pactfiles: PactSample.Shipping.PactTests/pacts
+          pactfiles: ./pacts
           tag_with_git_branch: false
           broker_url: ${{ secrets.PACT_BROKER_BASE_URL }}
           token: ${{ secrets.PACT_BROKER_TOKEN }}
