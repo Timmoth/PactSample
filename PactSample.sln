@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PactSample.Shipping", "PactSample.Shipping\PactSample.Shipping.csproj", "{2E5F013E-314A-4A66-8372-95AB3F66F76C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PactSample.Users", "PactSample.Users\PactSample.Users.csproj", "{C814A5D6-5B81-44B7-8CDC-C1063B28FDEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PactSample.Shipping.PactTests", "PactSample.Shipping.PactTests\PactSample.Shipping.PactTests.csproj", "{ABAA6AAE-3ED8-4861-A873-4024194CA74E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E5F013E-314A-4A66-8372-95AB3F66F76C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5F013E-314A-4A66-8372-95AB3F66F76C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5F013E-314A-4A66-8372-95AB3F66F76C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5F013E-314A-4A66-8372-95AB3F66F76C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C814A5D6-5B81-44B7-8CDC-C1063B28FDEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C814A5D6-5B81-44B7-8CDC-C1063B28FDEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C814A5D6-5B81-44B7-8CDC-C1063B28FDEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C814A5D6-5B81-44B7-8CDC-C1063B28FDEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABAA6AAE-3ED8-4861-A873-4024194CA74E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABAA6AAE-3ED8-4861-A873-4024194CA74E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABAA6AAE-3ED8-4861-A873-4024194CA74E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABAA6AAE-3ED8-4861-A873-4024194CA74E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
