@@ -1,0 +1,43 @@
+name: Test & Publish Pact Contracts
+
+on:
+  push:
+    branches: [ main ] # or whichever branch triggers a release
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    name: Run Consumer Pact Tests and Publish to PactFlow
+
+    env:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      CONSUMER_VERSION: ${{ github.sha }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore dependencies
+        run: dotnet restore PactSample.Shipping.sln
+
+      - name: Run Pact tests (generate contracts)
+        run: dotnet test PactSample.Shipping/PactSample.Shipping.csproj --no-build
+
+      - name: Install Pact CLI
+        run: |
+          curl -L https://github.com/pact-foundation/pact-cli/releases/download/v1.88.3/pact-1.88.3-linux-x86_64.tar.gz | tar xz
+          sudo mv pact /usr/local/bin/
+
+      - name: Publish Pact contracts to PactFlow
+        uses: pactflow/actions/publish-pact-files@v2
+        with:
+          pactfiles: ./pacts
+          tag_with_git_branch: false # optional, defaults to not false if not set. will auto tag with user specified branch, or set to auto detected branch
+          broker_url: ${{ secrets.PACT_BROKER_BASE_URL }}
+          token: ${{ secrets.PACT_BROKER_TOKEN }}
