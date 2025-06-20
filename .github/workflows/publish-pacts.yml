@@ -24,15 +24,10 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Restore dependencies
-        run: dotnet restore PactSample.Shipping.sln
+        run: dotnet restore PactSample.Shipping.csproj
 
       - name: Run Pact tests (generate contracts)
-        run: dotnet test PactSample.Shipping/PactSample.Shipping.csproj --no-build
-
-      - name: Install Pact CLI
-        run: |
-          curl -L https://github.com/pact-foundation/pact-cli/releases/download/v1.88.3/pact-1.88.3-linux-x86_64.tar.gz | tar xz
-          sudo mv pact /usr/local/bin/
+        run: dotnet test PactSample.Shipping.csproj --no-build
 
       - name: Publish Pact contracts to PactFlow
         uses: pactflow/actions/publish-pact-files@v2
