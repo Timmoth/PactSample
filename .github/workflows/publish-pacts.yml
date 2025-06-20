@@ -2,7 +2,7 @@ name: Test & Publish Pact Contracts
 
 on:
   push:
-    branches: [ main ] # or whichever branch triggers a release
+    branches: [ main ]
 
 jobs:
   test-and-publish:
@@ -21,18 +21,18 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: '8.x'  # Use 8.x unless you're on preview of .NET 9
 
       - name: Restore dependencies
-        run: dotnet restore PactSample.Shipping.csproj
+        run: dotnet restore PactSample.sln
 
       - name: Run Pact tests (generate contracts)
-        run: dotnet test PactSample.Shipping.csproj --no-build
+        run: dotnet test PactSample.Shipping.PactTests/PactSample.Shipping.PactTests.csproj --no-build
 
       - name: Publish Pact contracts to PactFlow
         uses: pactflow/actions/publish-pact-files@v2
         with:
-          pactfiles: ./pacts
-          tag_with_git_branch: false # optional, defaults to not false if not set. will auto tag with user specified branch, or set to auto detected branch
+          pactfiles: PactSample.Shipping.PactTests/pacts
+          tag_with_git_branch: false
           broker_url: ${{ secrets.PACT_BROKER_BASE_URL }}
           token: ${{ secrets.PACT_BROKER_TOKEN }}
