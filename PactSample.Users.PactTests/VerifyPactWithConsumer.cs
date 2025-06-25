@@ -31,7 +31,6 @@ public class VerifyPactWithConsumer : IClassFixture<ProducerWebApiTestServer>
 
         var pactBrokerUrl = Environment.GetEnvironmentVariable("PACT_BROKER_URL");
         var pactBrokerToken = Environment.GetEnvironmentVariable("PACT_BROKER_TOKEN");
-        var providerVersion = Environment.GetEnvironmentVariable("PACT_PROVIDER_VERSION") ?? "local";
 
         if (string.IsNullOrEmpty(pactBrokerUrl) || string.IsNullOrEmpty(pactBrokerToken))
         {
@@ -43,7 +42,25 @@ public class VerifyPactWithConsumer : IClassFixture<ProducerWebApiTestServer>
             .WithPactBrokerSource(new Uri(pactBrokerUrl), options =>
             {
                 options.TokenAuthentication(pactBrokerToken);
-                options.PublishResults(providerVersion);
+                
+                var sha = Environment.GetEnvironmentVariable("GITHUB_SHA");
+                var branch = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+                if (string.IsNullOrWhiteSpace(sha) || string.IsNullOrWhiteSpace(branch))
+                {
+                    return;
+                }
+
+                // https://docs.pact.io/pact_broker/pacticipant_version_numbers
+                var version = $"{sha[..7]}-{branch}";
+
+                options.PublishResults(version,
+                    results =>
+                    {
+                        // https://github.com/pact-foundation/pact-net/issues/376
+                        results.BuildUri(_testServer.ServerUri);
+                        results.ProviderTags("master");
+                    });
+                
             })
             .WithProviderStateUrl(new Uri(_testServer.ServerUri, "/provider-states"))
             .Verify();
