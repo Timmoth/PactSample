@@ -3,7 +3,55 @@ using System.Text;
 using Newtonsoft.Json;
 
 namespace PactSample.Users.PactTests;
+public abstract class BaseProviderStateMiddleware
+{
+    private readonly RequestDelegate _next;
+        
+    protected BaseProviderStateMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
 
+    protected abstract IDictionary<string, Action> ProviderStates { get; }
+
+    public Task Invoke(HttpContext context)
+    {
+        if (context.Request.Path.Value == "/provider-states")
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+
+            if (context.Request.Method == HttpMethod.Post.ToString() && context.Request.Body != null)
+            {
+                string jsonRequestBody;
+                using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
+                {
+                    jsonRequestBody = reader.ReadToEnd();
+                }
+
+                var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
+
+                //A null or empty provider state key must be handled
+                if (!string.IsNullOrEmpty(providerState?.State))
+                {
+                    ProviderStates[providerState.State].Invoke();
+                }
+
+                context.Response.WriteAsync(string.Empty);
+                return Task.CompletedTask;
+            }
+        }
+
+        return _next(context);
+    }
+   
+}
+
+public class ProviderState
+{
+    public string State { get; set; }
+    public string Consumer { get; set; }
+}
+/*
 public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 {
     protected abstract IDictionary<string, Action> ProviderStates { get; }
@@ -16,7 +64,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             return;
         }
         
-        if (!HttpMethods.IsPost(context.Request.Method) || context.Request.Body == null)
+        if (!HttpMethods.IsPost(context.Request.Method))
         {
             context.Response.StatusCode = 400;
             await context.Response.WriteAsync("Invalid request method or empty body.");
@@ -71,3 +119,4 @@ public class ProviderState
     [JsonProperty("action")]
     public string Action { get; set; }
 }
+*/
