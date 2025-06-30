@@ -24,7 +24,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
     private void HandleProviderStatesRequest(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        
+        return;
         if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
             context.Request.Body != null)
         {
