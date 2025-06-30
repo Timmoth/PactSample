@@ -41,7 +41,7 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
                     {
                         webBuilder.UseUrls(serverUri.ToString());
                         webBuilder.UseStartup<T>();
-                        //ConfigureTestWebHost(webBuilder);
+                        ConfigureTestWebHost(webBuilder);
                     });
 
                 hostBuilder.ConfigureServices(services =>

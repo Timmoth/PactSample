@@ -15,10 +15,6 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             await next(context);
             return;
         }
-
-        context.Response.StatusCode = 200;
-        await context.Response.WriteAsync("123");
-        return;
         
         if (!HttpMethods.IsPost(context.Request.Method) || context.Request.Body == null)
         {
