@@ -3,10 +3,11 @@ using System.Text;
 using System.Text.Json;
 
 namespace PactSample.Users.PactTests;
-public abstract class BaseProviderStateMiddleware(RequestDelegate next, ILogger<BaseProviderStateMiddleware> logger)
+public class BaseProviderStateMiddleware(RequestDelegate next, 
+    ILogger<BaseProviderStateMiddleware> logger, 
+    ProviderStates providerStates,
+    IServiceProvider serviceProvider)
 {
-    protected abstract IDictionary<string, Action> ProviderStates { get; }
-
     public async Task Invoke(HttpContext context)
     {
         logger.LogDebug("➡️ Invoking provider states middleware");
@@ -49,10 +50,10 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next, ILogger<
                 }
 
                 if (!string.IsNullOrEmpty(providerState.State)
-                    && ProviderStates.TryGetValue(providerState.State, out var setupAction))
+                    && providerStates.States.TryGetValue(providerState.State, out var setupAction))
                 {
                     logger.LogInformation("✅ Running provider state setup: {State}", providerState.State);
-                    setupAction?.Invoke();
+                    setupAction?.Invoke(serviceProvider);
                 }
                 else
                 {

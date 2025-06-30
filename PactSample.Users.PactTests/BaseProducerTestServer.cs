@@ -3,18 +3,22 @@ using System.Net.Sockets;
 using PactSample.Users.PactTests;
 using Serilog;
 
+public class ProviderStates(IDictionary<string, Action<IServiceProvider>> states)
+{
+    public readonly IDictionary<string, Action<IServiceProvider>> States = states;
+}
 public abstract class BaseProducerTestServer<T> : IDisposable where T : class 
 {
     private readonly IHost _server;
     public Uri ServerUri { get; }
-
+    
     protected BaseProducerTestServer()
     {
         var (host, uri) = StartServer();
         _server = host;
         ServerUri = uri;
     }
-
+    
     protected virtual void ConfigureTestServices(IServiceCollection services)
     {
         
@@ -24,6 +28,8 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
     {
         
     }
+
+    protected abstract IDictionary<string, Action<IServiceProvider>> GetProviderStates();
 
     private (IHost server, Uri uri) StartServer()
     {
@@ -60,6 +66,7 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
                     ConfigureTestServices(services);
                     // Register middleware injection
                     services.AddSingleton<IStartupFilter, TestMiddlewareStartupFilter>();
+                    services.AddSingleton(new ProviderStates(GetProviderStates()));
                 });
                 
                 var server = hostBuilder.Build();
@@ -100,8 +107,7 @@ public class TestMiddlewareStartupFilter : IStartupFilter
         return app =>
         {
             // Add your test middleware first
-            app.UseMiddleware<TestStateProvider>();
-
+            app.UseMiddleware<BaseProviderStateMiddleware>();
             // Then call the rest of the pipeline
             next(app);
         };

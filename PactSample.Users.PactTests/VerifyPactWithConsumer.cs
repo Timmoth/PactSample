@@ -15,6 +15,17 @@ public class UsersTestServer : BaseProducerTestServer<UsersStartup>
     {
         base.ConfigureTestWebHost(webHostBuilder);
     }
+
+    protected override IDictionary<string, Action<IServiceProvider>> GetProviderStates()
+    {
+        return new Dictionary<string, Action<IServiceProvider>>
+        {
+            ["A user with ID 4"] = provider =>
+            {
+                provider.GetRequiredService<UserRepo>().AddUser(new User(4, "test-user"));
+            }
+        };
+    }
 }
 
 public class UsersPactVerificationTests(UsersTestServer testServer, ITestOutputHelper output)

@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using PactSample.Users.PactTests;
 
-
-public class TestStateProvider : BaseProviderStateMiddleware
+/*public class TestStateProvider : BaseProviderStateMiddleware
 {
     private readonly IServiceProvider _provider;
     public TestStateProvider(
@@ -20,4 +19,4 @@ public class TestStateProvider : BaseProviderStateMiddleware
             _provider.GetRequiredService<UserRepo>().AddUser(new User(4, "test-user"));
         }
     };
-}
+}*/
