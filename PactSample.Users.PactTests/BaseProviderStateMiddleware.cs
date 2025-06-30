@@ -28,9 +28,6 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
         {
             jsonRequestBody = await reader.ReadToEndAsync();
         }
-
-        Console.WriteLine("Raw provider state request JSON:");
-        Console.WriteLine(jsonRequestBody);
         
         try
         {
