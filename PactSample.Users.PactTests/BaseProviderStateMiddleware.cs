@@ -17,7 +17,7 @@ public static class Helpers
     
 }
 public abstract class BaseProviderStateMiddleware(RequestDelegate next)
-{ 
+{
     protected abstract IDictionary<string, Action> ProviderStates { get; }
 
     public async Task Invoke(HttpContext context)
@@ -26,34 +26,31 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 
         if (context.Request.Path.Value == "/provider-states")
         {
-            this.HandleProviderStatesRequest(context);
-            await context.Response.WriteAsync(String.Empty);
+            await HandleProviderStatesRequestAsync(context);
+            await context.Response.WriteAsync(string.Empty);
         }
         else
         {
             await next(context);
         }
     }
-    
-    private void HandleProviderStatesRequest(HttpContext context)
+
+    private async Task HandleProviderStatesRequestAsync(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        Helpers.DebugLog("provider-state middleware" + context.Request.Path);
+        Helpers.DebugLog("provider-state middleware: " + context.Request.Path);
 
         try
         {
-            if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
-                context.Request.Body != null)
+            if (context.Request.Method.Equals(HttpMethod.Post.Method, StringComparison.OrdinalIgnoreCase)
+                && context.Request.Body != null)
             {
-                string jsonRequestBody = string.Empty;
-                using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
-                {
-                    jsonRequestBody = reader.ReadToEnd();
-                }
+                using var reader = new StreamReader(context.Request.Body, Encoding.UTF8);
+                var jsonRequestBody = await reader.ReadToEndAsync();
 
                 Helpers.DebugLog("deserialized json request body");
                 Helpers.DebugLog(jsonRequestBody);
-            
+
                 var providerState = JsonSerializer.Deserialize<ProviderState>(
                     jsonRequestBody,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -62,13 +59,13 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
                 if (providerState == null)
                 {
                     Helpers.DebugLog("⚠️ Failed to deserialize provider state.");
-                    Helpers.DebugLog(jsonRequestBody);
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(providerState.State) &&
-                    ProviderStates.TryGetValue(providerState.State, out var setupAction))
+                if (!string.IsNullOrEmpty(providerState.State)
+                    && ProviderStates.TryGetValue(providerState.State, out var setupAction))
                 {
+                    Helpers.DebugLog($"✅ Running provider state setup: {providerState.State}");
                     setupAction?.Invoke();
                 }
                 else
@@ -79,19 +76,13 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
         }
         catch (Exception e)
         {
-            Helpers.DebugLog(e.Message);
-            Helpers.DebugLog(e.StackTrace);
+            Helpers.DebugLog("❌ Exception in HandleProviderStatesRequestAsync");
             Helpers.DebugLog(e.ToString());
-            throw;
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
         }
-        
-      
 
-        Helpers.DebugLog("middleware returned 200");
+        Helpers.DebugLog("✅ middleware returned 200");
     }
-    
-
-
 }
 
 public class ProviderState
