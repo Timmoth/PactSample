@@ -4,26 +4,45 @@ using PactNet.Output.Xunit;
 using PactNet.Verifier;
 using Xunit.Abstractions;
 
-public class VerifyPactWithConsumer : IClassFixture<ProducerWebApiTestServer>
+public class UsersTestServer : BaseProducerTestServer<UsersStartup>
 {
-    private readonly ProducerWebApiTestServer _testServer;
-    private readonly ITestOutputHelper _output;
-
-    public VerifyPactWithConsumer(ProducerWebApiTestServer testServer, ITestOutputHelper output)
+    protected override void ConfigureTestServices(IServiceCollection services)
     {
-        _testServer = testServer;
-        _output = output;
+        base.ConfigureTestServices(services);
     }
 
+    protected override void ConfigureTestWebHost(IWebHostBuilder webHostBuilder)
+    {
+        base.ConfigureTestWebHost(webHostBuilder);
+    }
+}
+
+public class UsersPactVerificationTests(BaseProducerTestServer<UsersStartup> testServer, ITestOutputHelper output)
+    : BaseVerifyPactWithConsumer<UsersTestServer, UsersStartup>(testServer, output)
+{
     [Fact]
-    public void VerifyPact()
+    public void EnsureApiHonoursPactWithConsumers()
+    {
+        RunProducerPactVerification();
+    }
+}
+
+
+public abstract class BaseVerifyPactWithConsumer<T, U>(
+    BaseProducerTestServer<UsersStartup> testServer,
+    ITestOutputHelper output)
+    : IClassFixture<T>
+    where T : BaseProducerTestServer<U>
+    where U : IStartup
+{
+    protected void RunProducerPactVerification()
     {
         var config = new PactVerifierConfig
         {
             LogLevel = PactLogLevel.Debug,
             Outputters = new List<IOutput>()
             {
-                new XunitOutput(_output)
+                new XunitOutput(output)
             }
         };
 
@@ -38,7 +57,7 @@ public class VerifyPactWithConsumer : IClassFixture<ProducerWebApiTestServer>
         }
 
         pactVerifier
-            .WithHttpEndpoint(_testServer.ServerUri)
+            .WithHttpEndpoint(testServer.ServerUri)
             .WithPactBrokerSource(new Uri(pactBrokerUrl), options =>
             {
                 options.TokenAuthentication(pactBrokerToken);
@@ -57,12 +76,12 @@ public class VerifyPactWithConsumer : IClassFixture<ProducerWebApiTestServer>
                     results =>
                     {
                         // https://github.com/pact-foundation/pact-net/issues/376
-                        results.BuildUri(_testServer.ServerUri);
+                        results.BuildUri(testServer.ServerUri);
                         results.ProviderTags("master");
                     });
                 
             })
-            .WithProviderStateUrl(new Uri(_testServer.ServerUri, "/provider-states"))
+            .WithProviderStateUrl(new Uri(testServer.ServerUri, "/provider-states"))
             .Verify();
 
     }
