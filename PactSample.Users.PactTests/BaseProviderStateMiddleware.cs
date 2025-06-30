@@ -1,55 +1,54 @@
 using System.Net;
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace PactSample.Users.PactTests;
-public abstract class BaseProviderStateMiddleware
-{
-    private readonly RequestDelegate _next;
-        
-    protected BaseProviderStateMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
 
+public abstract class ProviderStateMiddleware(RequestDelegate next)
+{ 
     protected abstract IDictionary<string, Action> ProviderStates { get; }
 
-    public Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context)
     {
         if (context.Request.Path.Value == "/provider-states")
         {
-            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            this.HandleProviderStatesRequest(context);
+            await context.Response.WriteAsync(String.Empty);
+        }
+        else
+        {
+            await next(context);
+        }
+    }
 
-            if (context.Request.Method == HttpMethod.Post.ToString() && context.Request.Body != null)
+    private void HandleProviderStatesRequest(HttpContext context)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.OK;
+
+        if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
+            context.Request.Body != null)
+        {
+            string jsonRequestBody = String.Empty;
+            using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
             {
-                string jsonRequestBody;
-                using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
-                {
-                    jsonRequestBody = reader.ReadToEnd();
-                }
+                jsonRequestBody = reader.ReadToEnd();
+            }
 
-                var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
+            var providerState = JsonSerializer.Deserialize<ProviderState>(jsonRequestBody);
 
-                //A null or empty provider state key must be handled
-                if (!string.IsNullOrEmpty(providerState?.State))
-                {
-                    ProviderStates[providerState.State].Invoke();
-                }
-
-                context.Response.WriteAsync(string.Empty);
-                return Task.CompletedTask;
+            //A null or empty provider state key must be handled
+            if (providerState != null && !String.IsNullOrEmpty(providerState.State))
+            {
+                ProviderStates[providerState.State].Invoke();
             }
         }
-
-        return _next(context);
     }
-   
 }
 
 public class ProviderState
 {
-    public string State { get; set; }
     public string Consumer { get; set; }
+    public string State { get; set; }
 }
 /*
 public abstract class BaseProviderStateMiddleware(RequestDelegate next)
@@ -63,7 +62,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             await next(context);
             return;
         }
-        
+
         if (!HttpMethods.IsPost(context.Request.Method))
         {
             context.Response.StatusCode = 400;
@@ -76,7 +75,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
         {
             jsonRequestBody = await reader.ReadToEndAsync();
         }
-        
+
         try
         {
             var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
