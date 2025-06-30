@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace PactSample.Users.PactTests;
 
-public abstract class ProviderStateMiddleware(RequestDelegate next)
+public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 { 
     protected abstract IDictionary<string, Action> ProviderStates { get; }
 
