@@ -20,32 +20,59 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             await next(context);
         }
     }
-
+    
     private void HandleProviderStatesRequest(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        return;
+        DebugLog("provider-state middleware");
+        
         if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
             context.Request.Body != null)
         {
-            string jsonRequestBody = String.Empty;
+            string jsonRequestBody = string.Empty;
             using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
             {
                 jsonRequestBody = reader.ReadToEnd();
             }
 
-            var providerState = JsonSerializer.Deserialize<ProviderState>(jsonRequestBody);
+            DebugLog("deserialized json request body");
+            DebugLog(jsonRequestBody);
+            
+            var providerState = JsonSerializer.Deserialize<ProviderState>(
+                jsonRequestBody,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
 
-            //A null or empty provider state key must be handled
-            if (providerState != null && !String.IsNullOrEmpty(providerState.State))
+            if (providerState == null)
             {
-                if(ProviderStates.TryGetValue(providerState.State, out var acc))
-                {
-                    acc?.Invoke();
-                }
+                DebugLog("⚠️ Failed to deserialize provider state.");
+                DebugLog(jsonRequestBody);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(providerState.State) &&
+                ProviderStates.TryGetValue(providerState.State, out var setupAction))
+            {
+                setupAction?.Invoke();
+            }
+            else
+            {
+                DebugLog($"⚠️ Unknown provider state: '{providerState.State}'");
             }
         }
+
+        DebugLog("middleware returned 200");
     }
+    
+    private static void DebugLog(string message)
+    {
+        var dir = Path.Combine(Directory.GetCurrentDirectory(), "pact-debug");
+        Directory.CreateDirectory(dir); // Ensure it exists
+
+        var logPath = Path.Combine(dir, "pact-provider-debug.log");
+        File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] {message}{Environment.NewLine}");
+    }
+
 }
 
 public class ProviderState
