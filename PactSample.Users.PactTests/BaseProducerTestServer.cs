@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using PactSample.Users.PactTests;
 
 public abstract class BaseProducerTestServer<T> : IDisposable where T : class 
 {
@@ -41,6 +42,10 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
                         webBuilder.UseUrls(serverUri.ToString());
                         webBuilder.UseStartup<T>();
                         ConfigureTestWebHost(webBuilder);
+                        webBuilder.Configure(app =>
+                        {
+                            app.UseMiddleware<BaseProviderStateMiddleware>();
+                        });
                     });
 
                 hostBuilder.ConfigureServices(ConfigureTestServices);
