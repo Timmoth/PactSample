@@ -38,42 +38,54 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
     private void HandleProviderStatesRequest(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        Helpers.DebugLog("provider-state middleware");
-        
-        if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
-            context.Request.Body != null)
+        Helpers.DebugLog("provider-state middleware" + context.Request.Path);
+
+        try
         {
-            string jsonRequestBody = string.Empty;
-            using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
+            if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
+                context.Request.Body != null)
             {
-                jsonRequestBody = reader.ReadToEnd();
-            }
+                string jsonRequestBody = string.Empty;
+                using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
+                {
+                    jsonRequestBody = reader.ReadToEnd();
+                }
 
-            Helpers.DebugLog("deserialized json request body");
-            Helpers.DebugLog(jsonRequestBody);
-            
-            var providerState = JsonSerializer.Deserialize<ProviderState>(
-                jsonRequestBody,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
-
-            if (providerState == null)
-            {
-                Helpers.DebugLog("⚠️ Failed to deserialize provider state.");
+                Helpers.DebugLog("deserialized json request body");
                 Helpers.DebugLog(jsonRequestBody);
-                return;
-            }
+            
+                var providerState = JsonSerializer.Deserialize<ProviderState>(
+                    jsonRequestBody,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
 
-            if (!string.IsNullOrEmpty(providerState.State) &&
-                ProviderStates.TryGetValue(providerState.State, out var setupAction))
-            {
-                setupAction?.Invoke();
-            }
-            else
-            {
-                Helpers.DebugLog($"⚠️ Unknown provider state: '{providerState.State}'");
+                if (providerState == null)
+                {
+                    Helpers.DebugLog("⚠️ Failed to deserialize provider state.");
+                    Helpers.DebugLog(jsonRequestBody);
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(providerState.State) &&
+                    ProviderStates.TryGetValue(providerState.State, out var setupAction))
+                {
+                    setupAction?.Invoke();
+                }
+                else
+                {
+                    Helpers.DebugLog($"⚠️ Unknown provider state: '{providerState.State}'");
+                }
             }
         }
+        catch (Exception e)
+        {
+            Helpers.DebugLog(e.Message);
+            Helpers.DebugLog(e.StackTrace);
+            Helpers.DebugLog(e.ToString());
+            throw;
+        }
+        
+      
 
         Helpers.DebugLog("middleware returned 200");
     }
