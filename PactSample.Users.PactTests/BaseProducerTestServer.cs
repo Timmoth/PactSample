@@ -44,7 +44,7 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
                         ConfigureTestWebHost(webBuilder);
                         webBuilder.Configure(app =>
                         {
-                            app.UseMiddleware<BaseProviderStateMiddleware>();
+                            app.UseMiddleware<TestStateProvider>();
                         });
                     });
 

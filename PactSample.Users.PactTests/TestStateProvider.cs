@@ -7,5 +7,5 @@ public class TestStateProvider : BaseProviderStateMiddleware
     {
     }
 
-    protected override IDictionary<string, Action> ProviderStates { get; }
+    protected override IDictionary<string, Action> ProviderStates { get; } = new Dictionary<string, Action>();
 }
