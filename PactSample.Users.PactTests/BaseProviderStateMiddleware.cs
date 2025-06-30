@@ -4,12 +4,26 @@ using System.Text.Json;
 
 namespace PactSample.Users.PactTests;
 
+public static class Helpers
+{
+    public static void DebugLog(string message)
+    {
+        var dir = Path.Combine(Directory.GetCurrentDirectory(), "pact-debug");
+        Directory.CreateDirectory(dir); // Ensure it exists
+
+        var logPath = Path.Combine(dir, "pact-provider-debug.log");
+        File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] {message}{Environment.NewLine}");
+    }
+    
+}
 public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 { 
     protected abstract IDictionary<string, Action> ProviderStates { get; }
 
     public async Task Invoke(HttpContext context)
     {
+        Helpers.DebugLog("invoke provider states middleware");
+
         if (context.Request.Path.Value == "/provider-states")
         {
             this.HandleProviderStatesRequest(context);
@@ -24,7 +38,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
     private void HandleProviderStatesRequest(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        DebugLog("provider-state middleware");
+        Helpers.DebugLog("provider-state middleware");
         
         if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
             context.Request.Body != null)
@@ -35,8 +49,8 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
                 jsonRequestBody = reader.ReadToEnd();
             }
 
-            DebugLog("deserialized json request body");
-            DebugLog(jsonRequestBody);
+            Helpers.DebugLog("deserialized json request body");
+            Helpers.DebugLog(jsonRequestBody);
             
             var providerState = JsonSerializer.Deserialize<ProviderState>(
                 jsonRequestBody,
@@ -45,8 +59,8 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 
             if (providerState == null)
             {
-                DebugLog("⚠️ Failed to deserialize provider state.");
-                DebugLog(jsonRequestBody);
+                Helpers.DebugLog("⚠️ Failed to deserialize provider state.");
+                Helpers.DebugLog(jsonRequestBody);
                 return;
             }
 
@@ -57,21 +71,14 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             }
             else
             {
-                DebugLog($"⚠️ Unknown provider state: '{providerState.State}'");
+                Helpers.DebugLog($"⚠️ Unknown provider state: '{providerState.State}'");
             }
         }
 
-        DebugLog("middleware returned 200");
+        Helpers.DebugLog("middleware returned 200");
     }
     
-    private static void DebugLog(string message)
-    {
-        var dir = Path.Combine(Directory.GetCurrentDirectory(), "pact-debug");
-        Directory.CreateDirectory(dir); // Ensure it exists
 
-        var logPath = Path.Combine(dir, "pact-provider-debug.log");
-        File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] {message}{Environment.NewLine}");
-    }
 
 }
 

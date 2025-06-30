@@ -26,6 +26,8 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
 
     private (IHost server, Uri uri) StartServer()
     {
+        Helpers.DebugLog("Start server...");
+
         const int maxRetries = 5;
         Exception? lastException = null;
 
