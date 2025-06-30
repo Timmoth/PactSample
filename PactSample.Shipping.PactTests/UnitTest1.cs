@@ -5,11 +5,11 @@ using Microsoft.Extensions.Configuration;
 using PactNet.Output.Xunit;
 using Xunit.Abstractions;
 
-public class UserApiPactTest : IClassFixture<WebApplicationFactory<Microsoft.VisualStudio.TestPlatform.TestHost.Program>>
+public class UserApiPactTest : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Microsoft.VisualStudio.TestPlatform.TestHost.Program> _factory;
+    private readonly WebApplicationFactory<Program> _factory;
     private readonly PactConfig _pactConfig;
-    public UserApiPactTest(ITestOutputHelper output, WebApplicationFactory<Microsoft.VisualStudio.TestPlatform.TestHost.Program> factory)
+    public UserApiPactTest(ITestOutputHelper output, WebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _pactConfig = new PactConfig
