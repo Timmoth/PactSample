@@ -41,14 +41,17 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
                     {
                         webBuilder.UseUrls(serverUri.ToString());
                         webBuilder.UseStartup<T>();
-                        ConfigureTestWebHost(webBuilder);
-                        webBuilder.Configure(app =>
-                        {
-                            app.UseMiddleware<TestStateProvider>();
-                        });
+                        //ConfigureTestWebHost(webBuilder);
                     });
 
-                hostBuilder.ConfigureServices(ConfigureTestServices);
+                hostBuilder.ConfigureServices(services =>
+                {
+                    ConfigureTestServices(services);
+
+                    // Register middleware injection
+                    services.AddSingleton<IStartupFilter, TestMiddlewareStartupFilter>();
+                });
+                
                 var server = hostBuilder.Build();
                 
                 server.Start(); // May throw if port is already taken
@@ -76,5 +79,21 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
         
         l.Stop();
         return port;
+    }
+}
+
+
+public class TestMiddlewareStartupFilter : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+    {
+        return app =>
+        {
+            // Add your test middleware first
+            app.UseMiddleware<TestStateProvider>();
+
+            // Then call the rest of the pipeline
+            next(app);
+        };
     }
 }
