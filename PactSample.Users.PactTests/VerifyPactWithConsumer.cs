@@ -17,7 +17,7 @@ public class UsersTestServer : BaseProducerTestServer<UsersStartup>
     }
 }
 
-public class UsersPactVerificationTests(BaseProducerTestServer<UsersStartup> testServer, ITestOutputHelper output)
+public class UsersPactVerificationTests(UsersTestServer testServer, ITestOutputHelper output)
     : BaseVerifyPactWithConsumer<UsersTestServer, UsersStartup>(testServer, output)
 {
     [Fact]
