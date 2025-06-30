@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using PactSample.Users.PactTests;
+using Serilog;
 
 public abstract class BaseProducerTestServer<T> : IDisposable where T : class 
 {
@@ -26,8 +27,6 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
 
     private (IHost server, Uri uri) StartServer()
     {
-        Helpers.DebugLog("Start server...");
-
         const int maxRetries = 5;
         Exception? lastException = null;
 
@@ -38,18 +37,27 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : class
 
             try
             {
+                var logDir = Path.Combine(Directory.GetCurrentDirectory(), "pact-debug");
+                Directory.CreateDirectory(logDir); // Ensure directory exists
+
+                var logPath = Path.Combine(logDir, "pact-provider-debug.log");
+                
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+
                 var hostBuilder = Host.CreateDefaultBuilder()
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                         webBuilder.UseUrls(serverUri.ToString());
                         webBuilder.UseStartup<T>();
                         ConfigureTestWebHost(webBuilder);
-                    });
+                    }).UseSerilog();
 
                 hostBuilder.ConfigureServices(services =>
                 {
                     ConfigureTestServices(services);
-
                     // Register middleware injection
                     services.AddSingleton<IStartupFilter, TestMiddlewareStartupFilter>();
                 });
