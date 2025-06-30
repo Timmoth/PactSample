@@ -28,10 +28,11 @@ jobs:
         run: dotnet test PactSample.Users.PactTests/PactSample.Users.PactTests.csproj
         continue-on-error: true # don't fail the workflow so we can still upload logs
 
-      - name: Upload Pact Debug Log
+      - name: Upload Pact Debug Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pact-provider-debug
-          path: PactSample.Users.PactTests/pact-debug/pact-provider-debug.log
+          name: pact-debug
+          path: PactSample.Users.PactTests
+
 
