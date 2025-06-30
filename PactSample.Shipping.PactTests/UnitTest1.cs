@@ -30,6 +30,7 @@ public class UserApiPactTest : IClassFixture<WebApplicationFactory<Program>>
         
         pact
             .UponReceiving("A request for user with ID 4")
+            .Given("A user with ID 4")
             .WithRequest(HttpMethod.Get, "/users/4")
             .WillRespond()
             .WithStatus(200)
