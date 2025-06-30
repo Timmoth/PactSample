@@ -16,6 +16,10 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             return;
         }
 
+        context.Response.StatusCode = 200;
+        await context.Response.WriteAsync("123");
+        return;
+        
         if (!HttpMethods.IsPost(context.Request.Method) || context.Request.Body == null)
         {
             context.Response.StatusCode = 400;
@@ -29,6 +33,9 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             jsonRequestBody = await reader.ReadToEndAsync();
         }
 
+        Console.WriteLine("Raw provider state request JSON:");
+        Console.WriteLine(jsonRequestBody);
+        
         try
         {
             var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
