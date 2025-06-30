@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-public abstract class BaseProducerTestServer<T> : IDisposable where T : IStartup 
+public abstract class BaseProducerTestServer<T> : IDisposable where T : class 
 {
     private readonly IHost _server;
     public Uri ServerUri { get; }
@@ -39,7 +39,7 @@ public abstract class BaseProducerTestServer<T> : IDisposable where T : IStartup
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                         webBuilder.UseUrls(serverUri.ToString());
-                        webBuilder.UseStartup(typeof(T));
+                        webBuilder.UseStartup<T>();
                         ConfigureTestWebHost(webBuilder);
                     });
 

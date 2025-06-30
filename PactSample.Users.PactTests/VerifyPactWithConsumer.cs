@@ -29,11 +29,11 @@ public class UsersPactVerificationTests(UsersTestServer testServer, ITestOutputH
 
 
 public abstract class BaseVerifyPactWithConsumer<T, U>(
-    BaseProducerTestServer<UsersStartup> testServer,
+    T testServer,
     ITestOutputHelper output)
     : IClassFixture<T>
     where T : BaseProducerTestServer<U>
-    where U : IStartup
+    where U : class
 {
     protected void RunProducerPactVerification()
     {

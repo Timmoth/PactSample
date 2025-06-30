@@ -1,31 +1,27 @@
 using System.Text.Json.Serialization;
 
-public class UsersStartup : IStartup
+public class UsersStartup
 {
+    private readonly IConfiguration _configuration;
+
     public UsersStartup(IConfiguration configuration)
     {
-        Configuration = configuration;
+        _configuration = configuration;
     }
 
-    public IConfiguration Configuration { get; }
-
-    public IServiceProvider ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        return services.BuildServiceProvider();
     }
 
-    public void Configure(IApplicationBuilder app)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
-
         if (env.IsDevelopment())
         {
-            //...
+            // Development-specific setup
         }
 
         app.UseRouting();
-
         app.UseHttpsRedirection();
 
         app.UseEndpoints(endpoints =>
