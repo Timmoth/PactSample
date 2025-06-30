@@ -11,6 +11,7 @@ public class UsersStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddScoped<UserRepo>();
         services.AddEndpointsApiExplorer();
     }
 
@@ -26,14 +27,14 @@ public class UsersStartup
 
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapGet("/users/{id:int}", async context =>
+            endpoints.MapGet("/users/{id:int}", async (HttpContext context, UserRepo userRepo) =>
             {
                 var idStr = context.Request.RouteValues["id"]?.ToString();
                 if (int.TryParse(idStr, out int id))
                 {
-                    if (id == 4)
+                    var user = userRepo.GetUser(id);
+                    if (user != null)
                     {
-                        var user = new User(id, "test-user");
                         await context.Response.WriteAsJsonAsync(user);
                         return;
                     }
@@ -45,7 +46,22 @@ public class UsersStartup
     }
 }
 
-record User(
+public class UserRepo
+{
+    private static readonly Dictionary<int, User> _users = new Dictionary<int, User>();
+    
+    public User? GetUser(int id)
+    {
+        return _users.GetValueOrDefault(id);
+    }
+
+    public void AddUser(User user)
+    {
+        _users.Add(user.Id, user);
+    }
+}
+
+public record User(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("username")] string Username
 );
