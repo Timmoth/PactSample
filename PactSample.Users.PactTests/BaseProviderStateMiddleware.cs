@@ -24,7 +24,7 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
     private void HandleProviderStatesRequest(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-
+        
         if (context.Request.Method.ToUpper() == HttpMethod.Post.ToString().ToUpper() &&
             context.Request.Body != null)
         {
@@ -39,7 +39,10 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
             //A null or empty provider state key must be handled
             if (providerState != null && !String.IsNullOrEmpty(providerState.State))
             {
-                ProviderStates[providerState.State].Invoke();
+                if(ProviderStates.TryGetValue(providerState.State, out var acc))
+                {
+                    acc?.Invoke();
+                }
             }
         }
     }
