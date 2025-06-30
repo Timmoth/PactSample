@@ -8,44 +8,54 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 {
     protected abstract IDictionary<string, Action> ProviderStates { get; }
 
-    public Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context)
     {
         if (context.Request.Path.Value != "/provider-states")
-            return next(context);
-        
-        context.Response.StatusCode = (int)HttpStatusCode.OK;
+        {
+            await next(context);
+            return;
+        }
 
-        if (context.Request.Method != HttpMethod.Post.ToString() || context.Request.Body == null)
-            return next(context);
-        
+        if (!HttpMethods.IsPost(context.Request.Method) || context.Request.Body == null)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsync("Invalid request method or empty body.");
+            return;
+        }
+
         string jsonRequestBody;
         using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8))
         {
-            jsonRequestBody = reader.ReadToEnd();
+            jsonRequestBody = await reader.ReadToEndAsync();
         }
 
-        var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
-
-        //A null or empty provider state key must be handled
-        if (!string.IsNullOrEmpty(providerState?.State) &&
-            ProviderStates.TryGetValue(providerState.State, out var action))
+        try
         {
-            action();
+            var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
+
+            if (!string.IsNullOrEmpty(providerState?.State) &&
+                ProviderStates.TryGetValue(providerState.State, out var action))
+            {
+                action();
+                context.Response.StatusCode = 200;
+                await context.Response.WriteAsync(string.Empty);
+            }
+            else
+            {
+                Console.WriteLine($"Unknown provider state: '{providerState?.State}'");
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync($"Unknown provider state: '{providerState?.State}'");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"Unknown provider state: '{providerState?.State}'");
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return context.Response.WriteAsync($"Unknown provider state: '{providerState?.State}'");
+            Console.WriteLine($"Provider state deserialization failed: {ex}");
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("Internal server error in provider state handler.");
         }
-
-
-        return context.Response.WriteAsync(string.Empty);
-
-
     }
-   
 }
+
 
 public class ProviderState
 {
@@ -54,4 +64,10 @@ public class ProviderState
 
     [JsonProperty("consumer")]
     public string Consumer { get; set; }
+
+    [JsonProperty("params")]
+    public Dictionary<string, object> Params { get; set; }
+
+    [JsonProperty("action")]
+    public string Action { get; set; }
 }
