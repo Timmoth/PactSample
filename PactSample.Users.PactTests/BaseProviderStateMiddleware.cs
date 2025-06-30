@@ -27,13 +27,21 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
         var providerState = JsonConvert.DeserializeObject<ProviderState>(jsonRequestBody);
 
         //A null or empty provider state key must be handled
-        if (!string.IsNullOrEmpty(providerState?.State))
+        if (!string.IsNullOrEmpty(providerState?.State) &&
+            ProviderStates.TryGetValue(providerState.State, out var action))
         {
-            ProviderStates[providerState.State].Invoke();
+            action();
+        }
+        else
+        {
+            Console.WriteLine($"Unknown provider state: '{providerState?.State}'");
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return context.Response.WriteAsync($"Unknown provider state: '{providerState?.State}'");
         }
 
-        context.Response.WriteAsync(string.Empty);
-        return Task.CompletedTask;
+
+        return context.Response.WriteAsync(string.Empty);
+
 
     }
    
@@ -41,6 +49,9 @@ public abstract class BaseProviderStateMiddleware(RequestDelegate next)
 
 public class ProviderState
 {
+    [JsonProperty("state")]
     public string State { get; set; }
+
+    [JsonProperty("consumer")]
     public string Consumer { get; set; }
 }
